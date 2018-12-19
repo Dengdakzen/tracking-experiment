@@ -103,6 +103,7 @@ class KalmanBoxTracker(object):
     self.hits = 0
     self.hit_streak = 0
     self.age = 0
+    self.feet_pos = np.array([np.round(0.5*(bbox[0] + bbox[2])),bbox[3]])
 
   def update(self,bbox):
     """
@@ -125,7 +126,9 @@ class KalmanBoxTracker(object):
     if(self.time_since_update>0):
       self.hit_streak = 0
     self.time_since_update += 1
-    self.history.append(convert_x_to_bbox(self.kf.x))
+    x_bbox = convert_x_to_bbox(self.kf.x)
+    self.feet_pos = np.array([np.round(0.5*(x_bbox[0] + x_bbox[2])),x_bbox[3]])
+    self.history.append(x_bbox)
     return self.history[-1]
 
   def get_state(self):
@@ -244,7 +247,8 @@ if __name__ == '__main__':
   # sequences = ['PETS09-S2L1','TUD-Campus','TUD-Stadtmitte','ETH-Bahnhof','ETH-Sunnyday','ETH-Pedcross2','KITTI-13','KITTI-17','ADL-Rundle-6','ADL-Rundle-8','Venice-2']
   sequences = ['2min']
   args = parse_args()
-  display = args.display
+  # display = args.display
+  display = True
   phase = 'train'
   total_time = 0.0
   total_frames = 0
@@ -272,7 +276,7 @@ if __name__ == '__main__':
 
         if(display):
           # ax1 = fig.add_subplot(111, aspect='equal')
-          fn = 'mot_benchmark/%s/%s/img1/%07d.jpg'%(phase,seq,frame - 1)
+          fn = 'mot_benchmark/%s/%s/img1/%06d.jpg'%(phase,seq,frame - 1)
           # im =io.imread(fn)
           imcv = cv2.imread(fn)
           if frame == 1:
@@ -280,7 +284,7 @@ if __name__ == '__main__':
             if not os.path.exists('video'):
               os.makedirs('video')
             fourcc = cv2.VideoWriter_fourcc(*'XVID')
-            write_path = 'video/%s.avi'%(seq)
+            write_path = 'video/%s_2.mp4'%(seq)
             shp = (imcv.shape[1],imcv.shape[0])
             out = cv2.VideoWriter(write_path,fourcc, 30.0, shp)
           # ax1.imshow(im)
@@ -296,7 +300,8 @@ if __name__ == '__main__':
           if(display):
             d = d.astype(np.int32)
             # ax1.add_patch(patches.Rectangle((d[0],d[1]),d[2]-d[0],d[3]-d[1],fill=False,lw=1,ec=colours[d[4]%32,:]))
-            cv2.rectangle(imcv,(d[0],d[1]),(d[2],d[3]),color = colours[d[4]%100,:],thickness = 3)
+            # print(type(colours[d[4]%100,:]))
+            cv2.rectangle(imcv,(d[0],d[1]),(d[2],d[3]),color = (colours[d[4]%100,:]).tolist(),thickness = 3)
             # ax1.set_adjustable('box-forced')
 
         if(display):
