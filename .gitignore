@@ -8,6 +8,7 @@ ModelIndex.xml
 ExportedFiles.xml
 *.avi
 *.mp4
+.vscode/
 
 
 # Ignore deployment files
